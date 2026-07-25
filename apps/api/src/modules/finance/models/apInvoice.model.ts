@@ -16,7 +16,6 @@ const apInvoiceSchema = new Schema(
     purchaseOrderId: {
       type: Schema.Types.ObjectId,
       ref: "PurchaseOrder",
-      required: true,
     },
 
     invoiceNumber: {

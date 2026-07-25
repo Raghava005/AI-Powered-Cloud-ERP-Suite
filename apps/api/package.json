@@ -9,7 +9,7 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "worker:payroll": "ts-node-dev src/modules/payroll/workers/payroll.worker.ts",
-    "worker:reorder": "ts-node-dev src/modules/inventory/workers/reorder.worker.ts",
+    "worker:reorder": "ts-node-dev src/modules/payroll/workers/reorder.worker.ts",
     "worker:forecasting": "ts-node-dev src/modules/forecasting/workers/forecasting.worker.ts",
     "worker:reports": "ts-node-dev src/modules/dashboard/workers/report.worker.ts",
     "worker:anomaly": "ts-node-dev src/modules/anomaly/workers/anomalyScan.worker.ts"

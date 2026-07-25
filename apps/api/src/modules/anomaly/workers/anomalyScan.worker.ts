@@ -1,9 +1,15 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { Worker } from "bullmq";
 
+import { connectDB } from "../../../database/db";
 import { redisConnection } from "../../../config/redis";
 import { Tenant } from "../../auth/models/tenant.model";
 import { runTenantScan } from "../services/anomalyDetection.service";
 import { scheduleRecurringScan } from "../queues/anomalyScan.queue";
+
+connectDB();
 
 new Worker(
   "anomalyScanQueue",

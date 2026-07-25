@@ -1,5 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { Worker } from "bullmq";
 
+import { connectDB } from "../../../database/db";
 import { redisConnection } from "../../../config/redis";
 
 import {
@@ -7,6 +11,8 @@ import {
   callMLRetrainJob,
   invalidateForecastCache,
 } from "../services/forecasting.service";
+
+connectDB();
 
 new Worker(
   "forecastingQueue",

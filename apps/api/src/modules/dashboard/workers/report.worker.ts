@@ -1,5 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { Worker } from "bullmq";
 
+import { connectDB } from "../../../database/db";
 import { redisConnection } from "../../../config/redis";
 
 import {
@@ -10,6 +14,8 @@ import {
 import { sendEmail } from "../../notifications/services/email.service";
 
 import { ReportSchedule } from "../models/reportSchedule.model";
+
+connectDB();
 
 new Worker(
   "reportQueue",

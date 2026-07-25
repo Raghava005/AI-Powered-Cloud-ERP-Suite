@@ -29,6 +29,8 @@ export const runPayroll = async (
   
   try {
 
+    const user = (req as any).user;
+
     const {
       employeeId,
       month,
@@ -40,6 +42,7 @@ export const runPayroll = async (
     await payrollQueue.add(
       "runPayroll",
       {
+        tenantId: user.tenantId,
         employeeId,
         month,
         year,

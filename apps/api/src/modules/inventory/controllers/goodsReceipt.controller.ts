@@ -5,6 +5,7 @@ import { Request, Response } from "express";
 import { PurchaseOrder } from "../models/purchaseOrder.model";
 
 import { Inventory } from "../models/inventory.model";
+import { InventoryBatch } from "../models/inventoryBatch.model";
 import { GoodsReceipt } from "../models/goodsReceipt.model";
 import { reorderQueue } from "../queues/reorder.queue";
 import { detectInventoryMovementAnomaly } from "../../anomaly/services/anomalyDetection.service";
@@ -45,6 +46,11 @@ export const receiveGoods = async (
       tenantId: user.tenantId,
     });
 
+    const po = await PurchaseOrder.findById(purchaseOrderId).lean();
+    const unitPriceByItem = new Map(
+      (po?.items || []).map((i: any) => [String(i.inventoryItemId), i.unitPrice])
+    );
+
     // update inventory stock
     for (const item of receivedItems) {
      const updatedInventory =
@@ -57,6 +63,16 @@ export const receiveGoods = async (
     },
     { new: true }
   );
+
+// FIFO cost-layer for this receipt — inventory-issue consumes from here,
+// not from Inventory.quantity, so every receipt needs a matching batch.
+await InventoryBatch.create({
+  tenantId: user.tenantId,
+  inventoryItemId: item.inventoryItemId,
+  quantity: item.quantityReceived,
+  remainingQuantity: item.quantityReceived,
+  unitCost: unitPriceByItem.get(String(item.inventoryItemId)) ?? 0,
+});
 
 if (
   updatedInventory &&

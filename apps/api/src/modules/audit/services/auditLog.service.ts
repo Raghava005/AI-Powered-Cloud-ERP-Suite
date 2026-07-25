@@ -27,7 +27,31 @@ const entityTypeFromPath = (path: string): string => {
   return segments[apiIndex + 1] || "unknown";
 };
 
-export const recordAuditEntry = async (entry: {
+// The hash chain is a read-then-write over the tenant's last entry, which is
+// not atomic on its own — two requests for the same tenant finishing close
+// together can both read the same "last hash" and fork the chain. Since this
+// only runs within a single Node process, a per-tenant in-process queue is
+// enough to serialize the read+write and keep the chain linear.
+const tenantQueues = new Map<string, Promise<void>>();
+
+const enqueuePerTenant = (tenantId: string, task: () => Promise<void>): Promise<void> => {
+  const previous = tenantQueues.get(tenantId) ?? Promise.resolve();
+  const next = previous.then(task, task);
+  tenantQueues.set(tenantId, next.catch(() => {}));
+  return next;
+};
+
+export const recordAuditEntry = (entry: {
+  tenantId: string;
+  userId?: string;
+  method: string;
+  path: string;
+  statusCode: number;
+  ip?: string;
+  body?: unknown;
+}): Promise<void> => enqueuePerTenant(entry.tenantId, () => writeAuditEntry(entry));
+
+const writeAuditEntry = async (entry: {
   tenantId: string;
   userId?: string;
   method: string;
